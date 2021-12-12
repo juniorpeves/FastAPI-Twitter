@@ -57,9 +57,9 @@ class Tweet(BaseModel):
         min_length=1,
         max_length=256
     )
-    create_at: datetime = Field(default=datetime.now())
-    update_at: Optional[datetime] = Field(default=None)
-    by: User = Field(...)
+    created_at: datetime = Field(default=datetime.now())
+    updated_at: Optional[datetime] = Field(default=None)
+    by: UserBase = Field(...)
 
 # Path Operations
 
@@ -90,9 +90,9 @@ def singup(user: UserRegister = Body(...)):
     - last_name: str
     - birth_date: datetime        
     """  
-    with open("user.json", "r+", encoding="utf-8") as f:
+    with open("users.json", "r+", encoding="utf-8") as f:
         # Abriendo el archivo en modo de lectura & escritura
-        results = json.loads(f.read()) # De string a un simil de json
+        results = json.loads(f.read()) # Convertirlo a simil de json
         user_dict = user.dict() # De json a diccionario
         user_dict["user_id"] = str(user_dict["user_id"]) #Acomodando a variable a str
         user_dict["birth_date"] = str(user_dict["birth_date"]) #Acomodando a variable a str
@@ -121,8 +121,25 @@ def login():
     summary="Show all User",
     tags=["Users"]
 )
-def show_all_user():
-    pass
+def show_all_users():
+    """
+    # [Show all users]
+
+    This path operation shows all user in the app
+
+    ### Parameters
+    - 
+
+    ### Returns a json with the all users in the app, with the following keys:
+    - user_id: UUID
+    - email: EmailStr
+    - first_name: str
+    - last_name: str
+    - birth_date: datetime        
+    """ 
+    with open("user.json", "r", encoding="utf-8") as f:
+        results = json.loads(f.read()) 
+        return results
 
 ### Show a user
 @app.get(
@@ -178,8 +195,35 @@ def home():
     summary="Post a tweet",
     tags=["Tweets"]
 )
-def post():
-    pass
+def post(tweet: Tweet = Body(...)):
+    """
+    # [Post a tweet]
+
+    This path operation register a tweet in the app
+
+    ### Parameters
+    - Request body parameter: 
+        - **tweet: Tweet** 
+
+    ### Returns a json with the basic tweet information:
+    - tweet_id: UUID
+    - content: str
+    - create_at: datetime
+    - update_at: Optional[datetime]
+    - by: User
+    """  
+    with open("tweets.json", "r+", encoding="utf-8") as f:
+        results = json.loads(f.read()) 
+        tweet_dict =tweet.dict() 
+        tweet_dict["tweet_id"] = str(tweet_dict["tweet_id"]) 
+        tweet_dict["created_at"] = str(tweet_dict["created_at"]) 
+        if tweet_dict["updated_at"]:
+            tweet_dict["updated_at"] = str(tweet_dict["updated_at"]) 
+        tweet_dict["by"]["user_id"] = str(tweet_dict["by"]["user_id"])
+        results.append(tweet_dict)
+        f.seek(0) 
+        f.write(json.dumps(results))
+        return tweet
 
 ### Show a tweet
 @app.get(
