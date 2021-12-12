@@ -1,4 +1,5 @@
 # Python
+import json
 from uuid import UUID
 from datetime import date
 from datetime import datetime
@@ -12,6 +13,7 @@ from pydantic import Field # Validar los atributos de un modelo
 # FastAPI
 from fastapi import FastAPI
 from fastapi import status
+from fastapi import Body
 
 app = FastAPI()
 
@@ -71,7 +73,7 @@ class Tweet(BaseModel):
     summary="Register a User",
     tags=["Users"]
 )
-def singup():
+def singup(user: UserRegister = Body(...)):
     """
     # [Register a User]
 
@@ -82,13 +84,23 @@ def singup():
         - **user: userRegister** -> A person model with first name, last name, etc
 
     ### Returns a json with the basic user information:
-        - user_id: UUID
-        - email: EmailStr
-        - first_name: str
-        - last_name: str
-        - birth_date: date        
-    """
-    pass
+    - user_id: UUID
+    - email: EmailStr
+    - first_name: str
+    - last_name: str
+    - birth_date: datetime        
+    """  
+    with open("user.json", "r+", encoding="utf-8") as f:
+        # Abriendo el archivo en modo de lectura & escritura
+        results = json.loads(f.read()) # De string a un simil de json
+        user_dict = user.dict() # De json a diccionario
+        user_dict["user_id"] = str(user_dict["user_id"]) #Acomodando a variable a str
+        user_dict["birth_date"] = str(user_dict["birth_date"]) #Acomodando a variable a str
+        results.append(user_dict) #Añadiendo nuevo usuario al archivo
+        f.seek(0) # Moverte al inicio del archivo
+        f.write(json.dumps(results)) # Convirtiendo de una list_dic a un json
+        return user
+        
 
 ### Login a user
 @app.post(
